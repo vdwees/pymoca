@@ -372,18 +372,19 @@ class Generator(TreeListener):
     def exitIfEquation(self, tree):
         logger.debug('exitIfEquation')
 
-        assert (len(tree.equations) % (len(tree.conditions) + 1) == 0)
+        # Check if every equation block contains the same number of equations
+        if len(set((len(x) for x in tree.blocks))) != 1:
+            raise Exception("Every branch in an if-equation needs the same number of equations.")
 
-        equations_per_condition = int(
-            len(tree.equations) / (len(tree.conditions) + 1))
+        # NOTE: We currently assume that we always have an else-clause. This
+        # is not strictly necessary, see the Modelica Spec on if equations.
+        assert tree.conditions[-1] == True
 
-        src = ca.vertcat(*[self.get_mx(tree.equations[-(i + 1)])
-                           for i in range(equations_per_condition)])
-        for cond_index in range(len(tree.conditions)):
+        src = ca.vertcat(*[self.get_mx(e) for e in tree.blocks[-1]])
+
+        for cond_index in range(1, len(tree.conditions)):
             cond = self.get_mx(tree.conditions[-(cond_index + 1)])
-            expr1 = ca.vertcat(*[self.get_mx(tree.equations[-equations_per_condition * (
-                cond_index + 1) - (i + 1)]) for i in range(equations_per_condition)])
-
+            expr1 = ca.vertcat(*[self.get_mx(e) for e in tree.blocks[-(cond_index + 1)]])
             src = ca.if_else(cond, expr1, src, True)
 
         self.src[tree] = src
@@ -404,30 +405,35 @@ class Generator(TreeListener):
 
         # We assume an equal number of statements per branch.
         # Furthermore, we assume that every branch assigns to the same variables.
-        assert (len(tree.statements) % (len(tree.conditions) + 1) == 0)
+        assert len(set((len(x) for x in tree.blocks))) == 1
 
-        statements_per_condition = int(
-            len(tree.statements) / (len(tree.conditions) + 1))
+        # NOTE: We currently assume that we always have an else-clause. This
+        # is not strictly necessary, see the Modelica Spec on if statements.
+        assert tree.conditions[-1] == True
 
-        all_assignments = []
-        for statement_index in range(statements_per_condition):
-            assignments = self.get_mx(tree.statements[-(statement_index + 1)])
-            for assignment in assignments:
-                src = assignment.right
-                for cond_index in range(len(tree.conditions)):
-                    cond = self.get_mx(tree.conditions[-(cond_index + 1)])
-                    src1 = None
-                    for i in range(statements_per_condition):
-                        other_assignments = self.get_mx(tree.statements[-statements_per_condition * (
-                            cond_index + 1) - (i + 1)])
-                        for j in range(len(other_assignments)):
-                            if ca.is_equal(assignment.left, other_assignments[j].left):
-                                src1 = other_assignments[j].right
-                                break
-                        if src1 is not None:
-                            break
-                    src = ca.if_else(cond, src1, src, True)
-                all_assignments.append(Assignment(assignment.left, src))
+        expanded_blocks = []
+
+        for b in tree.blocks:
+            block_assignments = []
+            for s in b:
+                block_assignments.extend(self.get_mx(s))
+            # Make sure the symbols are in the same order by sorting
+            expanded_blocks.append(sorted(block_assignments, key=lambda x: x.left.__hash__()))
+
+        assert len(set((len(x) for x in expanded_blocks))) == 1
+
+        statements_per_condition = len(expanded_blocks[0])
+        all_assignments = [None] * statements_per_condition
+
+        for i in reversed(range(len(expanded_blocks))):
+            cond = self.get_mx(tree.conditions[i]) if not isinstance(tree.conditions[i], bool) else tree.conditions[i]
+            for j in range(statements_per_condition):
+                if cond == True:
+                    all_assignments[j] = expanded_blocks[i][j]
+                else:
+                    all_assignments[j] = Assignment(
+                        all_assignments[j].left,
+                        ca.if_else(cond, all_assignments[j].right, expanded_blocks[i][j].right, True))
 
         self.src[tree] = all_assignments
 
@@ -642,11 +648,11 @@ class Generator(TreeListener):
 
     def get_mx(self, tree: Union[ast.Symbol, ast.ComponentRef, ast.Expression]) -> ca.MX:
         """
-        We pull components and symbols from the AST on demand.  
+        We pull components and symbols from the AST on demand.
         This is to ensure that parametrized vector dimensions can be resolved.  Vector
         dimensions need to be known at CasADi MX creation time.
-        :param tree: 
-        :return: 
+        :param tree:
+        :return:
         """
         if tree not in self.src:
             if isinstance(tree, ast.Symbol):
