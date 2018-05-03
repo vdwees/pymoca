@@ -161,10 +161,11 @@ class GenCasadiTest(unittest.TestCase):
         zerotest__H = ca.MX.sym("zerotest.H")
         zerotest__Q = ca.MX.sym("zerotest.Q")
 
-        ref_model.alg_states = list(map(Variable, [p__H, a__down__H, b__down__H, c__down__H, c__up__H, hb__up__H, a__up__H,
-                                b__up__H, qa__down__H, a__up__Q, qa__down__Q, c__down__Q, hb__up__Q, c__up__Q, b__up__Q,
-                                b__down__Q, p__Q, a__down__Q, zerotest__H, zerotest__Q]))
-
+        ref_model.alg_states = list(map(Variable, [
+            a__up__H, a__down__H, b__up__H, b__down__H, c__up__H, c__down__H,
+            qa__down__H, p__H, hb__up__H, zerotest__H,
+            a__up__Q, a__down__Q, b__up__Q, b__down__Q, c__up__Q, c__down__Q,
+            qa__down__Q, p__Q, hb__up__Q, zerotest__Q]))
         ref_model.equations = [a__up__H - a__down__H,
                                b__up__H - b__down__H,
                                c__up__H - c__down__H,
@@ -233,10 +234,16 @@ class GenCasadiTest(unittest.TestCase):
         hb__up__Q = ca.MX.sym("hb.up.Q")
         hb__up__Z = ca.MX.sym("hb.up.Z")
 
-        ref_model.alg_states = list(map(Variable, [qc__down__H, a__down__H, b__down__H, c__down__H, c__up__H, hb__up__H, a__up__H,
-                                b__up__H, qa__down__H, a__up__Q, qa__down__Q, c__down__Q, hb__up__Q, c__up__Q, b__up__Q,
-                                b__down__Q, qc__down__Q, a__down__Q, a__up__Z, a__down__Z, b__up__Z, b__down__Z,
-                                c__up__Z, c__down__Z, d__up__H, d__up__Q, d__down__Q, d__down__H, d__down__Z, qa__down__Z, qc__down__Z, hb__up__Z]))
+        ref_model.alg_states = list(map(Variable, [
+            a__up__H, a__down__H, b__up__H, b__down__H,
+            c__up__H, c__down__H, d__up__H, d__down__H,
+            qa__down__H, qc__down__H, hb__up__H,
+            a__up__Q, a__down__Q, b__up__Q, b__down__Q,
+            c__up__Q, c__down__Q, d__up__Q, d__down__Q,
+            qa__down__Q, qc__down__Q, hb__up__Q,
+            a__up__Z, a__down__Z, b__up__Z, b__down__Z,
+            c__up__Z, c__down__Z, d__down__Z,
+            qa__down__Z, qc__down__Z, hb__up__Z]))
 
         ref_model.equations = [a__up__H - a__down__H,
                                a__up__Q + a__down__Q,
@@ -451,7 +458,7 @@ class GenCasadiTest(unittest.TestCase):
         S1 = ca.MX.sym("S1")
         S2 = ca.MX.sym("S2")
         r = ca.MX.sym("r")
-        ref_model.alg_states = list(map(Variable, [c, a, d, e, S1, S2, r]))
+        ref_model.alg_states = list(map(Variable, [r, c, a, d, e, S1, S2]))
         ref_model.outputs = list(map(Variable, [c, a, d, e, S1, S2]))
         ref_model.equations = [ca.vertcat(c, a, d, e, S1, S2) - ca.vertcat(*circle_properties.call([r])[0:-1])]
 
