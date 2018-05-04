@@ -330,6 +330,10 @@ class Generator(TreeListener):
         if src_left.shape != src_right.shape and src_left.shape == src_right.shape[::-1]:
             src_right = ca.transpose(src_right)
 
+        if src_left.shape != src_right.shape:
+            raise ValueError("Equation shape mismatch: {} vs. {} (Equation: {} = {})".format(
+                src_left.shape, src_right.shape, str(src_left), str(src_right)))
+
         self.src[tree] = src_left - src_right
 
     def enterForEquation(self, tree):
