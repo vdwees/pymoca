@@ -7,6 +7,8 @@ def new_mx(name, *shape):
     if len(shape) == 1 and not np.isscalar(shape[0]):
         shape = shape[0]
 
+    assert len(shape) <= 2
+
     obj = ca.MX.sym(name, *shape)
     obj._modelica_shape = tuple(shape)
     return obj
