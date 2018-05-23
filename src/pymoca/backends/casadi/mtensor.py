@@ -7,6 +7,7 @@ import casadi as ca
 
 import numpy as np
 
+
 def _new_mx(name, *shape):
     if len(shape) == 1 and not np.isscalar(shape[0]):
         shape = shape[0]
