@@ -1,9 +1,13 @@
+"""
+The functions and classes defined here are only supposed to be used internally
+within Pymoca. Externally, everything should be ca.MX
+"""
+
 import casadi as ca
 
 import numpy as np
 
-
-def new_mx(name, *shape):
+def _new_mx(name, *shape):
     if len(shape) == 1 and not np.isscalar(shape[0]):
         shape = shape[0]
 
@@ -14,7 +18,7 @@ def new_mx(name, *shape):
     return obj
 
 
-class MTensor:
+class _MTensor:
     def __init__(self, name, *shape):
         self._shape = tuple(shape)
         self._mx = ca.MX.sym(name, np.prod(shape))

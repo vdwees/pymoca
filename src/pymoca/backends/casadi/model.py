@@ -7,7 +7,7 @@ import re
 
 from pymoca import ast
 from .alias_relation import AliasRelation
-from .mtensor import MTensor
+from .mtensor import _MTensor
 
 logger = logging.getLogger("pymoca")
 
@@ -361,7 +361,7 @@ class Model:
                                     setattr(component_var, attribute, value[ind])
                             expanded_symbols.append(component_var)
 
-                        s = old_var.symbol._mx if isinstance(old_var.symbol, MTensor) else old_var.symbol
+                        s = old_var.symbol._mx if isinstance(old_var.symbol, _MTensor) else old_var.symbol
                         symbols.append(s)
                         values.append(ca.reshape(ca.vertcat(*[x.symbol for x in expanded_symbols]), *tuple(reversed(s.shape))).T)
                         new_vars.extend(expanded_symbols)
