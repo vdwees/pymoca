@@ -609,11 +609,7 @@ class GenCasadiTest(unittest.TestCase):
         self.assert_model_equivalent_numeric(ref_model, casadi_model)
 
     def test_array_3d(self):
-        with open(os.path.join(MODEL_DIR, 'Array3D.mo'), 'r') as f:
-            txt = f.read()
-        ast_tree = parser.parse(txt)
-        casadi_model = gen_casadi.generate(ast_tree, 'Array3D')
-        casadi_model.simplify({'expand_vectors': True})
+        casadi_model = transfer_model(MODEL_DIR, 'Array3D', {'expand_vectors': True})
 
         target_param_values = np.array([[[ -5.326999,  54.050758,  0.000000],
                                     [ -1.0,        0.0,       0.0]],
